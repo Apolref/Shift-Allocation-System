@@ -1,0 +1,14 @@
+Dia,Turno,Funcionário,Setor
+1,Manhã,Carlos,Classificação de Risco
+1,Manhã,Mariana,Classificação de Risco
+1,Manhã,João,Sala de Emergência
+1,Manhã,Ana,Sala de Medicação
+1,Manhã,Pedro,Sala de Medicação
+1,Tarde,Carlos,Classificação de Risco
+1,Tarde,Mariana,Classificação de Risco
+1,Tarde,João,Sala de Emergência
+1,Tarde,Ana,Sala de Medicação
+1,Tarde,Pedro,Sala de Medicação
+1,Noite,Carlos,Classificação de Risco
+1,Noite,João,Sala de Emergência
+1,Noite,Pedro,Sala de Medicação
