@@ -107,7 +107,6 @@ def carregar_funcionarios(csv_path):
             setores_preferidos=setores_preferidos
         ))
     return funcionarios
-
 def distribuir_com_regras(funcionarios, turno, turno_id):
     setores_alocados = {s: [] for s in REGRAS_SETOR.keys()}
     funcionarios_turno = [f for f in funcionarios if f.turno() == turno and f.turno_id == turno_id]
@@ -115,50 +114,57 @@ def distribuir_com_regras(funcionarios, turno, turno_id):
 
     utilizados = set()
 
-    # Etapa 1: alocar o mínimo necessário
+    # ETAPA 1: GARANTIR MÍNIMO DE ENFERMEIROS POR SETOR
     for setor, regras in REGRAS_SETOR.items():
-        candidatos = [f for f in funcionarios_turno if f not in utilizados and (not f.setores_preferidos or setor in f.setores_preferidos)]
+        min_enf = regras["min_enfermeiros"]
+        enfermeiros_disp = [f for f in funcionarios_turno if f not in utilizados and f.profissao == "Enfermeiro"]
 
-        enfermeiros = [f for f in candidatos if f.profissao == "Enfermeiro"]
-        outros = [f for f in candidatos if f.profissao != "Enfermeiro"]
-
-        alocados = []
-
-        while len(alocados) < regras["min_total"]:
-            if len(alocados) < regras["min_enfermeiros"]:
-                if enfermeiros:
-                    f = enfermeiros.pop()
-                else:
-                    break
+        alocados_enf = []
+        for f in enfermeiros_disp:
+            if len(alocados_enf) < min_enf:
+                alocados_enf.append(f)
+                utilizados.add(f)
             else:
-                if outros:
-                    f = outros.pop()
-                elif enfermeiros:
-                    f = enfermeiros.pop()
-                else:
-                    break
-            alocados.append(f)
+                break
+
+        setores_alocados[setor].extend(alocados_enf)
+
+    # ETAPA 2: GARANTIR MÍNIMO TOTAL DE FUNCIONÁRIOS POR SETOR
+    for setor, regras in REGRAS_SETOR.items():
+        min_total = regras["min_total"]
+        ja_alocados = setores_alocados[setor]
+        faltam = max(0, min_total - len(ja_alocados))
+
+        disponiveis = [f for f in funcionarios_turno if f not in utilizados]
+        random.shuffle(disponiveis)
+
+        for f in disponiveis:
+            if faltam <= 0:
+                break
+            setores_alocados[setor].append(f)
             utilizados.add(f)
+            faltam -= 1
 
-        setores_alocados[setor].extend(alocados)
-
-    # Etapa 2: redistribuir os funcionários que sobraram
+    # ETAPA 3: REDISTRIBUIR QUEM SOBROU IGUALMENTE ENTRE OS SETORES
     nao_alocados = [f for f in funcionarios_turno if f not in utilizados]
     setores = list(REGRAS_SETOR.keys())
     i = 0
 
     while nao_alocados:
         f = nao_alocados.pop()
-        # Priorizar setor preferido entre os disponíveis
         setor_destino = None
+
+        # Prioriza setor preferido entre os disponíveis
         for pref in f.setores_preferidos:
             if pref in setores:
                 setor_destino = pref
                 break
+
         # Se não tiver preferência válida, alocar circularmente
         if not setor_destino:
             setor_destino = setores[i % len(setores)]
             i += 1
+
         setores_alocados[setor_destino].append(f)
         utilizados.add(f)
 
@@ -172,6 +178,7 @@ def alocar_escala(funcionarios, rotatividade=False, frequencia_rotatividade=1, m
         ano_atual = datetime.now().year
 
     resultados = []
+
     for i in range(gerar_para_meses):
         mes = ((mes_atual - 1 + i) % 12) + 1
         ano = ano_atual + ((mes_atual - 1 + i) // 12)
@@ -183,30 +190,38 @@ def alocar_escala(funcionarios, rotatividade=False, frequencia_rotatividade=1, m
                 setores = distribuir_com_regras(funcionarios, turno, turno_id)
 
                 os.makedirs("escalas", exist_ok=True)
-                for setor, lista in setores.items():
-                    dados = []
-                    for f in lista:
-                        if aplicar_rotatividade:
-                            setor_compat = [s for s in f.setores_preferidos if s != f.setor and s in REGRAS_SETOR]
-                            if setor_compat:
-                                f.setor = random.choice(setor_compat)
 
-                        f.setor = setor  # forçar setor correto para consistência
+                for setor_alocado, lista in setores.items():
+                    dados = []
+
+                    for f in lista:
+                        # Se houver rotatividade, sortear outro setor preferido
+                        setor_final = setor_alocado
+                        if aplicar_rotatividade:
+                            compat = [s for s in f.setores_preferidos if s != f.setor and s in REGRAS_SETOR]
+                            if compat:
+                                setor_final = random.choice(compat)
+
+                        # Criar linha baseada no funcionário original, mas com setor da alocação
                         linha = f.to_dict()
+                        linha["Setor"] = setor_final
                         linha["Mês"] = f"{nome_mes} de {ano}"
                         marca = "D" if f.turno() == "Diurno" else "N"
+
                         for dia in f.dias(mes, ano):
                             linha[f"Dia {dia}"] = marca
+
                         dados.append(linha)
 
                     if dados:
                         df = pd.DataFrame(dados)
-                        nome_arquivo = f"{setor.replace(' ', '_').replace('/', '-')}_({turno} {turno_id})_{nome_mes}_{ano}.csv"
+                        nome_arquivo = f"{setor_alocado.replace(' ', '_').replace('/', '-')}_({turno} {turno_id})_{nome_mes}_{ano}.csv"
                         caminho_completo = os.path.join("escalas", nome_arquivo)
                         df.to_csv(caminho_completo, index=False)
-                        resultados.append((f"{setor} ({turno} {turno_id}) - {nome_mes} de {ano}", caminho_completo, df))
+                        resultados.append((f"{setor_alocado} ({turno} {turno_id}) - {nome_mes} de {ano}", caminho_completo, df))
 
     return resultados
+
 
 def adicionar_funcionario_interface():
     st.subheader("Adicionar novo funcionário")
@@ -269,10 +284,38 @@ def registrar_ocorrencia(nome, data, motivo):
         df_total = nova_ocorrencia
 
     df_total.to_csv(caminho_arquivo, index=False)
+
+def obter_setor_real(nome_funcionario, data, turno, plantao):
+    """
+    Retorna o setor em que o funcionário está alocado na escala gerada para o mês e ano da data fornecida.
+    """
+    nome_funcionario = nome_funcionario.strip().lower()
+    mes = MESES_PT[data.month - 1]
+    ano = data.year
+
+    escala_dir = "escalas"
+    if not os.path.exists(escala_dir):
+        return None
+
+    for arquivo in os.listdir(escala_dir):
+        if not arquivo.endswith(".csv"):
+            continue
+        if f"({turno} {plantao})" in arquivo and f"{mes}_{ano}" in arquivo:
+            caminho = os.path.join(escala_dir, arquivo)
+            try:
+                df = pd.read_csv(caminho)
+                for _, row in df.iterrows():
+                    if row["Nome"].strip().lower() == nome_funcionario:
+                        return row.get("Setor", None)
+            except Exception:
+                continue
+    return None
+
 def verificar_impacto_falta(nome_faltante, data, funcionarios):
     dia = data.day
     mes = data.month
     ano = data.year
+    dia_coluna = f"Dia {dia}"
 
     funcionario = next((f for f in funcionarios if f.nome == nome_faltante), None)
     if not funcionario:
@@ -282,17 +325,29 @@ def verificar_impacto_falta(nome_faltante, data, funcionarios):
     turno = funcionario.turno()
     turno_id = funcionario.turno_id
 
-    em_servico = [
-        f for f in funcionarios
-        if f.setor == setor
-        and f.turno() == turno
-        and f.turno_id == turno_id
-        and dia in f.dias(mes, ano)
-        and f.nome != nome_faltante
+    nome_arquivo_esperado = f"{setor.replace(' ', '_').replace('/', '-')}_({turno} {turno_id})_{MESES_PT[mes - 1]}_{ano}.csv"
+    caminho_escala = os.path.join("escalas", nome_arquivo_esperado)
+
+    if not os.path.exists(caminho_escala):
+        return {"erro": f"Arquivo de escala {nome_arquivo_esperado} não encontrado."}
+
+    try:
+        df_escala = pd.read_csv(caminho_escala)
+    except Exception as e:
+        return {"erro": f"Erro ao ler escala: {e}"}
+
+    if dia_coluna not in df_escala.columns:
+        return {"erro": f"A escala não contém a coluna {dia_coluna}."}
+
+    # Funcionários efetivamente em serviço no dia (com marcação "D" ou "N")
+    em_servico = df_escala[
+        (df_escala[dia_coluna].isin(["D", "N"])) &
+        (df_escala["Setor"] == setor) &
+        (df_escala["Plantão"] == turno_id)
     ]
 
     total_em_servico = len(em_servico)
-    total_enfermeiros = sum(1 for f in em_servico if f.profissao == "Enfermeiro")
+    total_enfermeiros = sum(em_servico["Função"] == "Enfermeiro")
 
     requisitos = REGRAS_SETOR.get(setor, {"min_total": 0, "min_enfermeiros": 0})
     min_total = requisitos["min_total"]
@@ -309,22 +364,24 @@ def verificar_impacto_falta(nome_faltante, data, funcionarios):
         mensagens.append(f"⚠️ Setor **{setor}** com apenas {total_enfermeiros} enfermeiro(s) (mínimo: {min_enf}).")
         suprido = False
 
-    sobrando = [
-        f for f in funcionarios
-        if f.setor != setor
-        and f.turno() == turno
-        and f.turno_id == turno_id
-        and dia in f.dias(mes, ano)
-    ]
+    # Verificar se há substitutos possíveis (sobras de outros setores no mesmo turno e plantão)
+    sobras = []
+    for f in funcionarios:
+        if (
+            f.setor != setor and
+            f.turno() == turno and
+            f.turno_id == turno_id and
+            dia in f.dias(mes, ano)
+        ):
+            sobras.append(f)
 
     return {
         "suprido": suprido,
         "em_servico": em_servico,
-        "sobrando": sobrando,
+        "sobrando": sobras,
         "faltante": funcionario,
         "mensagens": mensagens
     }
-
 def registrar_falta_interface(funcionarios):
     st.subheader("Registrar falta(s) de funcionário(s)")
 
@@ -360,11 +417,18 @@ def registrar_falta_interface(funcionarios):
                 num_sobrando = len(resultado["sobrando"])
                 if num_sobrando > 0:
                     st.info(f"Há {num_sobrando} funcionário(s) disponíveis no mesmo turno e plantão.")
+
+                    with st.expander("Visualizar funcionários disponíveis"):
+                        for f in resultado["sobrando"]:
+                            setor_real = obter_setor_real(f.nome, data, f.turno(), f.turno_id)
+                            setor_txt = f"alocado em: _{setor_real}_" if setor_real else "sem alocação encontrada"
+                            pref_txt = f", preferências: {', '.join(f.setores_preferidos)}" if f.setores_preferidos else ""
+                            st.markdown(f"- **{f.nome}** — {f.profissao}, {setor_txt}{pref_txt}")
                 else:
                     st.error("Nenhum funcionário disponível no mesmo turno. Pode ser necessário hora extra.")
 
                 mensagem = (
-                    f"⚠️ URGENTE: Setor {setor} ({turno} {turno_id}) está abaixo do mínimo.\n"
+                    f"URGENTE: Setor {setor} ({turno} {turno_id}) está abaixo do mínimo.\n"
                     f"Necessário {faltante.profissao.lower()} extra para cobrir falta no dia {dia_str}.\n"
                     "Favor entrar em contato se puder ajudar."
                 )
@@ -384,9 +448,6 @@ def registrar_falta_interface(funcionarios):
                 )
 
 
-
-
-
 def visualizar_ocorrencias_interface():
     st.subheader("Visualizar ocorrências registradas")
 
@@ -401,6 +462,165 @@ def visualizar_ocorrencias_interface():
         st.dataframe(df)
     else:
         st.info(f"Nenhum relatório encontrado para {mes} de {ano}.")
+
+def registrar_falta_planejada_interface(funcionarios):
+    st.subheader("Registrar falta planejada")
+
+    nome = st.selectbox("Funcionário", [f.nome for f in funcionarios])
+    data = st.date_input("Data da falta planejada", value=date.today())
+    tipo = st.selectbox("Tipo de falta", [
+        "FA", "FM", "FE", "LP", "F", "LM", "LS", "A"
+    ], format_func=lambda x: f"{x} - {TIPOS_FALTA_DESCRICAO.get(x, '')}")
+
+    if st.button("Registrar falta planejada"):
+        funcionario = next((f for f in funcionarios if f.nome == nome), None)
+
+        if not funcionario:
+            st.error("Funcionário não encontrado.")
+            return
+
+        # 1. REGISTRA NO CSV DE FALTAS
+        nova_falta = pd.DataFrame([{
+            "Nome": nome,
+            "Data": data.strftime("%Y-%m-%d"),
+            "Tipo": tipo
+        }])
+
+        os.makedirs("faltas", exist_ok=True)
+        caminho_csv = os.path.join("faltas", "faltas_planejadas.csv")
+        if os.path.exists(caminho_csv):
+            faltas_existentes = pd.read_csv(caminho_csv)
+            df_total = pd.concat([faltas_existentes, nova_falta], ignore_index=True)
+        else:
+            df_total = nova_falta
+        df_total.to_csv(caminho_csv, index=False)
+
+        # 2. REGISTRA NO RELATÓRIO DE OCORRÊNCIAS
+        registrar_ocorrencia(nome, data, f"Falta planejada: {tipo}")
+
+        # 3. APLICA A FALTA NA ESCALA (caso possível)
+        aplicar_falta_planejada_na_escala(nome, data, tipo)
+
+        # 4. VERIFICA IMPACTO SOMENTE SE SETOR ESTÁ ATIVO NAQUELE DIA
+        mes_nome = MESES_PT[data.month - 1]
+        ano = data.year
+        dia_coluna = f"Dia {data.day}"
+
+        resultado = None
+        if os.path.exists("escalas"):
+            for nome_arquivo in os.listdir("escalas"):
+                if not nome_arquivo.endswith(".csv"):
+                    continue
+                if mes_nome not in nome_arquivo or str(ano) not in nome_arquivo:
+                    continue
+
+                caminho_escala = os.path.join("escalas", nome_arquivo)
+                try:
+                    df = pd.read_csv(caminho_escala)
+                except:
+                    continue
+
+                if nome in df["Nome"].values and dia_coluna in df.columns:
+                    resultado = verificar_impacto_falta(nome, data, funcionarios)
+                    break  # só avalia uma vez
+
+        if resultado:
+            if resultado.get("erro"):
+                st.error(resultado["erro"])
+                return
+
+            setor = resultado["faltante"].setor
+            turno = resultado["faltante"].turno()
+            turno_id = resultado["faltante"].turno_id
+            dia_str = data.strftime("%d/%b")
+
+            st.markdown(f"### Avaliação de impacto da falta - {setor} ({turno} {turno_id})")
+
+            if resultado["suprido"]:
+                st.success("Setor ainda está com o número mínimo de funcionários.")
+            else:
+                for msg in resultado["mensagens"]:
+                    st.warning(msg)
+
+                if resultado["sobrando"]:
+                    st.info(f"Há {len(resultado['sobrando'])} funcionário(s) disponíveis no mesmo turno e plantão.")
+
+                    with st.expander("Visualizar funcionários disponíveis"):
+                        for f in resultado["sobrando"]:
+                            setor_real = obter_setor_real(f.nome, data, f.turno(), f.turno_id)
+                            setor_txt = f"alocado em: _{setor_real}_" if setor_real else "sem alocação encontrada"
+                            pref_txt = f", preferências: {', '.join(f.setores_preferidos)}" if f.setores_preferidos else ""
+                            st.markdown(f"- **{f.nome}** — {f.profissao}, {setor_txt}{pref_txt}")
+
+                else:
+                    st.error("Nenhum funcionário disponível. Pode ser necessário hora extra.")
+
+                mensagem = (
+                    f"URGENTE: Setor {setor} ({turno} {turno_id}) está abaixo do mínimo.\n"
+                    f"Necessário {resultado['faltante'].profissao.lower()} extra para cobrir falta no dia {dia_str}.\n"
+                    "Favor entrar em contato se puder ajudar."
+                )
+                mensagem_encoded = mensagem.replace(" ", "%20").replace("\n", "%0A")
+                url_whatsapp = f"https://wa.me/?text={mensagem_encoded}"
+
+                st.markdown(
+                    f"""
+                    <a href="{url_whatsapp}" target="_blank">
+                        <button style="background-color:#25D366;color:white;padding:10px;border:none;border-radius:5px;cursor:pointer;">
+                            Disparar solicitação de hora extra via WhatsApp
+                        </button>
+                    </a>
+                    """,
+                    unsafe_allow_html=True
+                )
+        else:
+            st.info("Falta registrada com sucesso. Nenhuma verificação de impacto foi feita porque o setor não está ativo nesse dia.")
+
+
+def aplicar_falta_planejada_na_escala(nome, data, tipo):
+    mes_nome = MESES_PT[data.month - 1]
+    ano = data.year
+    dia_coluna = f"Dia {data.day}"
+
+    if not os.path.exists("escalas"):
+        return
+
+    for nome_arquivo in os.listdir("escalas"):
+        if not nome_arquivo.endswith(".csv"):
+            continue
+        if mes_nome not in nome_arquivo or str(ano) not in nome_arquivo:
+            continue
+
+        caminho_escala = os.path.join("escalas", nome_arquivo)
+        try:
+            df = pd.read_csv(caminho_escala)
+        except:
+            continue
+
+        if nome not in df["Nome"].values:
+            continue
+
+        if dia_coluna not in df.columns:
+            continue
+
+        df[dia_coluna] = df[dia_coluna].astype(str)
+        df.loc[df["Nome"] == nome, dia_coluna] = tipo
+        df.to_csv(caminho_escala, index=False)
+        print(f"Falta planejada aplicada em {nome_arquivo}, dia {data.day}")
+        break  # aplicar apenas uma vez
+
+
+# Dicionário para exibir descrição dos tipos de falta na interface
+TIPOS_FALTA_DESCRICAO = {
+    "FA": "Falta Abonada",
+    "FM": "Folga Mensal",
+    "FE": "Folga Eleitoral",
+    "LP": "Licença Prêmio",
+    "F":  "Férias",
+    "LM": "Licença Maternidade",
+    "LS": "Licença Saúde",
+    "A":  "Aniversário"
+}
 
 
 
@@ -420,17 +640,16 @@ st.title("Sistema de Alocação de Funcionários - UPA")
 funcionarios = carregar_funcionarios(CAMINHO_CSV_DEFAULT)
 
 st.sidebar.header("Ações")
-if st.sidebar.button("Encerrar servidor Streamlit", help="Fecha este app imediatamente"):
-    st.write("Encerrando servidor...")
-    os.kill(os.getpid(), signal.SIGTERM)
 acao = st.sidebar.radio("Escolha uma ação", [
     "Alocar novas escalas",
     "Visualizar escalas",
     "Adicionar novo funcionário",
     "Visualizar e editar funcionários",
     "Registrar falta ou ocorrência",
+    "Registrar faltas planejadas",
     "Visualizar ocorrências"
 ])
+
 
 if acao == "Alocar novas escalas":
     rotatividade = st.checkbox("Ativar rotatividade de setores", value=False)
@@ -539,6 +758,8 @@ elif acao == "Visualizar e editar funcionários":
 elif acao == "Registrar falta ou ocorrência":
     registrar_falta_interface(funcionarios)
 
+elif acao == "Registrar faltas planejadas":
+    registrar_falta_planejada_interface(funcionarios)
+
 elif acao == "Visualizar ocorrências":
     visualizar_ocorrencias_interface()
-
