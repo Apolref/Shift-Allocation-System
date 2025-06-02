@@ -71,49 +71,55 @@ Márcio Teles,600029.0,Enfermeiro,07x19,Repouso/observação,A,"Repouso/observa�
 Gabriel Santos,123456.0,Técnico de enfermagem,19x07,Sala de sutura e CME,B,"Sala de sutura e CME, Sala de emergência, Repouso/observação",Noturno
 Peter Parker,342.542,Enfermeiro,19x07,Sala de sutura e CME,B,"Sala de sutura e CME, Sala de medicação, Sala de emergência",Noturno
 Carlos Henrique José,124.125,Técnico de enfermagem,07x19,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME, Classificação de risco",Diurno
-Rita Gomes,700001,Enfermeiro,07x19,Sala de emergência,A,"Sala de emergência, Classificação de risco",
-Eduardo Matos,700002,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME",
-Tatiane Silva,700003,Técnico de enfermagem,07x19,Sala de medicação,B,"Sala de medicação, Sala de sutura e CME",
-Marcio Pina,700004,Técnico de enfermagem,07x19,Sala de medicação,A,"Sala de medicação, Repouso/observação",
-André Souza,700005,Técnico de enfermagem,19x07,Sala de emergência,A,"Sala de emergência, Sala de medicação",
-Julio Costa,700006,Auxiliar de enfermagem,19x07,Classificação de risco,A,"Classificação de risco, Repouso/observação",
-Aiko Tanaka,700001,Técnico de enfermagem,07x19,Sala de emergência,A,"Sala de emergência, Sala de medicação"
-Miguel Ángel,700002,Enfermeiro,19x07,Repouso/observação,B,"Repouso/observação, Sala de emergência"
-Fatima Zahra,700003,Auxiliar de enfermagem,19x07,Sala de medicação,B,"Sala de medicação, Sala de sutura e CME"
-Liam O'Connor,700004,Técnico de enfermagem,07x19,Sala de sutura e CME,B,"Sala de sutura e CME, Classificação de risco"
-Anastasia Volkova,700005,Enfermeiro,07x19,Classificação de risco,A,"Classificação de risco"
-Raj Patel,700006,Técnico de enfermagem,19x07,Sala de emergência,A,"Sala de emergência, Repouso/observação"
-Chen Wei,700007,Auxiliar de enfermagem,07x19,Sala de medicação,B,"Sala de medicação, Sala de emergência"
-Carlos Gómez,700008,Enfermeiro,07x19,Sala de medicação,B,"Sala de medicação, Repouso/observação"
-Zara Hassan,700009,Técnico de enfermagem,19x07,Sala de sutura e CME,A,"Sala de sutura e CME, Sala de medicação"
-Noah Müller,700010,Técnico de enfermagem,07x19,Repouso/observação,A,"Repouso/observação, Sala de emergência"
-Lucía Fernández,700011,Auxiliar de enfermagem,19x07,Repouso/observação,B,"Repouso/observação, Sala de medicação"
-Hassan Al-Sayed,700012,Técnico de enfermagem,07x19,Sala de emergência,B,"Sala de emergência, Classificação de risco"
-Yuki Sato,700013,Auxiliar de enfermagem,19x07,Sala de sutura e CME,B,"Sala de sutura e CME, Sala de medicação"
-Isabelle Moreau,700014,Enfermeiro,19x07,Classificação de risco,B,"Classificação de risco, Repouso/observação"
-Pedro Alvarez,700015,Técnico de enfermagem,07x19,Repouso/observação,B,"Repouso/observação, Sala de emergência"
-Sophie Dubois,700016,Auxiliar de enfermagem,07x19,Sala de medicação,A,"Sala de medicação, Sala de emergência"
-Omar Nasri,700017,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME"
-Emma Johansson,700018,Enfermeiro,07x19,Classificação de risco,B,"Classificação de risco, Sala de medicação"
-Lucas Da Silva,700019,Técnico de enfermagem,19x07,Repouso/observação,A,"Repouso/observação, Sala de emergência"
-Nina Petrova,700020,Técnico de enfermagem,07x19,Sala de sutura e CME,A,"Sala de sutura e CME, Repouso/observação"
-Akira Tanaka,800001,Enfermeiro,07x19,Classificação de risco,A,"Classificação de risco, Sala de medicação"
-Sofia Ivanova,800002,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência, Sala de medicação"
-Luca Bianchi,800003,Auxiliar de enfermagem,07x19,Sala de medicação,B,"Sala de medicação, Repouso/observação"
-Amir El-Sayed,800004,Técnico de enfermagem,19x07,Repouso/observação,B,"Repouso/observação, Sala de sutura e CME"
-Ava Müller,800005,Enfermeiro,19x07,Sala de medicação,A,"Sala de medicação, Repouso/observação"
-Youssef Haddad,800006,Auxiliar de enfermagem,07x19,Sala de sutura e CME,B,"Sala de sutura e CME"
-Carmen Silva,800007,Técnico de enfermagem,07x19,Sala de emergência,A,"Sala de emergência"
-Oscar Fernández,800008,Enfermeiro,07x19,Sala de emergência,A,"Sala de emergência, Classificação de risco"
-Nadia Petrova,800009,Técnico de enfermagem,19x07,Repouso/observação,A,"Repouso/observação"
-Zhang Wei,800010,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência"
-Lina Müller,800011,Auxiliar de enfermagem,07x19,Repouso/observação,B,"Repouso/observação, Sala de medicação"
-Mateo González,800012,Enfermeiro,07x19,Sala de medicação,A,"Sala de medicação, Repouso/observação"
-Chloe Dubois,800013,Técnico de enfermagem,19x07,Sala de sutura e CME,A,"Sala de sutura e CME, Repouso/observação"
-Leila Hussein,800014,Auxiliar de enfermagem,07x19,Sala de medicação,B,"Sala de medicação"
-Arjun Patel,800015,Enfermeiro,19x07,Classificação de risco,B,"Classificação de risco, Sala de emergência"
-Noah Johansson,800016,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência"
-Isabella Conti,800017,Auxiliar de enfermagem,07x19,Repouso/observação,A,"Repouso/observação, Sala de medicação"
-Tomás Oliveira,800018,Técnico de enfermagem,07x19,Sala de medicação,A,"Sala de medicação, Sala de emergência"
-Sara Kim,800019,Enfermeiro,19x07,Sala de medicação,B,"Sala de medicação, Repouso/observação"
-Davi Costa,800020,Técnico de enfermagem,07x19,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME"
+Rita Gomes,700001.0,Enfermeiro,07x19,Sala de emergência,A,"Sala de emergência, Classificação de risco",
+Eduardo Matos,700002.0,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME",
+Tatiane Silva,700003.0,Técnico de enfermagem,07x19,Sala de medicação,B,"Sala de medicação, Sala de sutura e CME",
+Marcio Pina,700004.0,Técnico de enfermagem,07x19,Sala de medicação,A,"Sala de medicação, Repouso/observação",
+André Souza,700005.0,Técnico de enfermagem,19x07,Sala de emergência,A,"Sala de emergência, Sala de medicação",
+Julio Costa,700006.0,Auxiliar de enfermagem,19x07,Classificação de risco,A,"Classificação de risco, Repouso/observação",
+Aiko Tanaka,700001.0,Técnico de enfermagem,07x19,Sala de emergência,A,"Sala de emergência, Sala de medicação",
+Miguel Ángel,700002.0,Enfermeiro,19x07,Repouso/observação,B,"Repouso/observação, Sala de emergência",
+Fatima Zahra,700003.0,Auxiliar de enfermagem,19x07,Sala de medicação,B,"Sala de medicação, Sala de sutura e CME",
+Liam O'Connor,700004.0,Técnico de enfermagem,07x19,Sala de sutura e CME,B,"Sala de sutura e CME, Classificação de risco",
+Anastasia Volkova,700005.0,Enfermeiro,07x19,Classificação de risco,A,Classificação de risco,
+Raj Patel,700006.0,Técnico de enfermagem,19x07,Sala de emergência,A,"Sala de emergência, Repouso/observação",
+Chen Wei,700007.0,Auxiliar de enfermagem,07x19,Sala de medicação,B,"Sala de medicação, Sala de emergência",
+Carlos Gómez,700008.0,Enfermeiro,07x19,Sala de medicação,B,"Sala de medicação, Repouso/observação",
+Zara Hassan,700009.0,Técnico de enfermagem,19x07,Sala de sutura e CME,A,"Sala de sutura e CME, Sala de medicação",
+Noah Müller,700010.0,Técnico de enfermagem,07x19,Repouso/observação,A,"Repouso/observação, Sala de emergência",
+Lucía Fernández,700011.0,Auxiliar de enfermagem,19x07,Repouso/observação,B,"Repouso/observação, Sala de medicação",
+Hassan Al-Sayed,700012.0,Técnico de enfermagem,07x19,Sala de emergência,B,"Sala de emergência, Classificação de risco",
+Yuki Sato,700013.0,Auxiliar de enfermagem,19x07,Sala de sutura e CME,B,"Sala de sutura e CME, Sala de medicação",
+Isabelle Moreau,700014.0,Enfermeiro,19x07,Classificação de risco,B,"Classificação de risco, Repouso/observação",
+Pedro Alvarez,700015.0,Técnico de enfermagem,07x19,Repouso/observação,B,"Repouso/observação, Sala de emergência",
+Sophie Dubois,700016.0,Auxiliar de enfermagem,07x19,Sala de medicação,A,"Sala de medicação, Sala de emergência",
+Omar Nasri,700017.0,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME",
+Emma Johansson,700018.0,Enfermeiro,07x19,Classificação de risco,B,"Classificação de risco, Sala de medicação",
+Lucas Da Silva,700019.0,Técnico de enfermagem,19x07,Repouso/observação,A,"Repouso/observação, Sala de emergência",
+Nina Petrova,700020.0,Técnico de enfermagem,07x19,Sala de sutura e CME,A,"Sala de sutura e CME, Repouso/observação",
+Akira Tanaka,800001.0,Enfermeiro,07x19,Classificação de risco,A,"Classificação de risco, Sala de medicação",
+Sofia Ivanova,800002.0,Técnico de enfermagem,19x07,Sala de emergência,B,"Sala de emergência, Sala de medicação",
+Luca Bianchi,800003.0,Auxiliar de enfermagem,07x19,Sala de medicação,B,"Sala de medicação, Repouso/observação",
+Amir El-Sayed,800004.0,Técnico de enfermagem,19x07,Repouso/observação,B,"Repouso/observação, Sala de sutura e CME",
+Ava Müller,800005.0,Enfermeiro,19x07,Sala de medicação,A,"Sala de medicação, Repouso/observação",
+Youssef Haddad,800006.0,Auxiliar de enfermagem,07x19,Sala de sutura e CME,B,Sala de sutura e CME,
+Carmen Silva,800007.0,Técnico de enfermagem,07x19,Sala de emergência,A,Sala de emergência,
+Oscar Fernández,800008.0,Enfermeiro,07x19,Sala de emergência,A,"Sala de emergência, Classificação de risco",
+Nadia Petrova,800009.0,Técnico de enfermagem,19x07,Repouso/observação,A,Repouso/observação,
+Zhang Wei,800010.0,Técnico de enfermagem,19x07,Sala de emergência,B,Sala de emergência,
+Lina Müller,800011.0,Auxiliar de enfermagem,07x19,Repouso/observação,B,"Repouso/observação, Sala de medicação",
+Mateo González,800012.0,Enfermeiro,07x19,Sala de medicação,A,"Sala de medicação, Repouso/observação",
+Chloe Dubois,800013.0,Técnico de enfermagem,19x07,Sala de sutura e CME,A,"Sala de sutura e CME, Repouso/observação",
+Leila Hussein,800014.0,Auxiliar de enfermagem,07x19,Sala de medicação,B,Sala de medicação,
+Arjun Patel,800015.0,Enfermeiro,19x07,Classificação de risco,B,"Classificação de risco, Sala de emergência",
+Noah Johansson,800016.0,Técnico de enfermagem,19x07,Sala de emergência,B,Sala de emergência,
+Isabella Conti,800017.0,Auxiliar de enfermagem,07x19,Repouso/observação,A,"Repouso/observação, Sala de medicação",
+Tomás Oliveira,800018.0,Técnico de enfermagem,07x19,Sala de medicação,A,"Sala de medicação, Sala de emergência",
+Sara Kim,800019.0,Enfermeiro,19x07,Sala de medicação,B,"Sala de medicação, Repouso/observação",
+Davi Costa,800020.0,Técnico de enfermagem,07x19,Sala de emergência,B,"Sala de emergência, Sala de sutura e CME",
+Natália Ribeiro,800030.0,Enfermeiro,19x07,Sala de emergência,A,"Repouso/observação, Sala de emergência, Sala de medicação",Noturno
+Diana Armando,100100.0,Responsável Técnico,07x19,Sala de emergência,A,Sala de emergência,Diurno
+Nelson Armando,100101.0,Responsável Técnico,19x07,Sala de medicação,A,Sala de medicação,Noturno
+Diana Batista,100102.0,Responsável Técnico,07x19,Repouso/observação,B,Repouso/observação,Diurno
+Nelson Batista,100103.0,Responsável Técnico,19x07,Sala de sutura e CME,B,Sala de sutura e CME,Noturno
+Marcelo Cunha,100105.0,Supervisor Técnico,07:30x16:30,Supervisão Técnica,A,"Classificação de risco, Sala de emergência, Sala de medicação, Sala de sutura e CME, Repouso/observação",Diurno
