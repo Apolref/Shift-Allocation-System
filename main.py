@@ -18,6 +18,9 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 
+if 'primeira_execucao' not in st.session_state:
+    st.session_state.primeira_execucao = True
+
 CAMINHO_CSV_DEFAULT = r"C:\\Users\\alelo\\OneDrive\\Documentos\\USP\\TCC\\Projeto\\funcionarios_upa.csv"
 
 MESES_PT = [
@@ -231,7 +234,14 @@ def distribuir_com_regras(funcionarios, turno, turno_id):
 
     return setores_alocados
 
-def alocar_escala(funcionarios, rotatividade=False, frequencia_rotatividade=1, mes_atual=None, gerar_para_meses=1, ano_atual=None):
+def alocar_escala(
+        funcionarios,
+        rotatividade=False,
+        frequencia_rotatividade=1,
+        mes_atual=None,
+        gerar_para_meses=1,
+        ano_atual=None):
+
     if mes_atual is None:
         mes_atual = datetime.now().month
     if ano_atual is None:
@@ -240,56 +250,82 @@ def alocar_escala(funcionarios, rotatividade=False, frequencia_rotatividade=1, m
     resultados = []
 
     for i in range(gerar_para_meses):
+        # ---------- mês/ano que será processado ----------
         mes = ((mes_atual - 1 + i) % 12) + 1
         ano = ano_atual + ((mes_atual - 1 + i) // 12)
         nome_mes = MESES_PT[mes - 1]
         aplicar_rotatividade = rotatividade and (mes % frequencia_rotatividade == 0)
 
-        ultimo_dia_mes = monthrange(ano, mes)[1]  # <-- dias reais do mês
+        ultimo_dia_mes = monthrange(ano, mes)[1]
 
+        # --------------- varre turnos A/B -----------------
         for turno in ["Diurno", "Noturno"]:
             for turno_id in ["A", "B"]:
                 setores = distribuir_com_regras(funcionarios, turno, turno_id)
 
+                # ---------------- RTs e Supervisores ----------------
                 rts_validos = [
                     f for f in funcionarios
-                    if getattr(f, "is_responsavel", False)
-                    and f.turno() == turno
-                    and f.turno_id == turno_id
+                    if f.is_responsavel and f.turno() == turno and f.turno_id == turno_id
                 ]
-                supervisores_validos = [
-                    f for f in funcionarios
-                    if getattr(f, "is_supervisor", False)
-                ]
+                supervisores_validos = [f for f in funcionarios if f.is_supervisor]
 
-                # Corrigido: calcula os dias reais de acordo com o plantão
-                dias_validos = list(range(1, ultimo_dia_mes + 1, 2)) if turno_id == "A" else list(range(2, ultimo_dia_mes + 1, 2))
+                # --------- NOVO CÁLCULO DE dias_validos -------------
+                # (exatamente a mesma lógica de Funcionario.dias)
+                if mes == 1:
+                    mes_anterior = 12
+                    ano_anterior = ano - 1
+                else:
+                    mes_anterior = mes - 1
+                    ano_anterior = ano
+
+                ultimo_anterior = monthrange(ano_anterior, mes_anterior)[1]
+
+                if ultimo_anterior % 2 == 1:          # mês anterior tem 31 dias
+                    dias_validos = (
+                        list(range(2, ultimo_dia_mes + 1, 2))  # pares
+                        if turno_id == "A"
+                        else list(range(1, ultimo_dia_mes + 1, 2))  # ímpares
+                    )
+                else:                                 # mês anterior tem 30/28 dias
+                    dias_validos = (
+                        list(range(1, ultimo_dia_mes + 1, 2))  # ímpares
+                        if turno_id == "A"
+                        else list(range(2, ultimo_dia_mes + 1, 2))  # pares
+                    )
+                # -----------------------------------------------------
 
                 os.makedirs("escalas", exist_ok=True)
+
                 for setor, lista in setores.items():
                     if setor not in REGRAS_SETOR:
                         continue
 
                     dados = []
 
+                    # ---------- aloca equipe base do setor ----------
                     for f in lista:
-                        if aplicar_rotatividade and not getattr(f, "is_supervisor", False) and not getattr(f, "is_responsavel", False):
-                            setor_compat = [s for s in f.setores_preferidos if s != f.setor and s in REGRAS_SETOR]
-                            if setor_compat:
-                                f.setor = random.choice(setor_compat)
+                        # rotatividade opcional
+                        if aplicar_rotatividade and not (f.is_supervisor or f.is_responsavel):
+                            possiveis = [s for s in f.setores_preferidos
+                                         if s != f.setor and s in REGRAS_SETOR]
+                            if possiveis:
+                                f.setor = random.choice(possiveis)
 
                         f.setor = setor
                         linha = f.to_dict()
                         linha["Mês"] = f"{nome_mes} de {ano}"
                         marca = "D" if f.turno() == "Diurno" else "N"
+
                         for dia in f.dias(mes, ano):
                             if dia in dias_validos:
                                 linha[f"Dia {dia}"] = marca
                         dados.append(linha)
 
-                    # Evita duplicatas
-                    nomes_na_escala = set([linha["Nome"] for linha in dados])
+                    # evita duplicata de nomes
+                    nomes_na_escala = {l["Nome"] for l in dados}
 
+                    # ---------- adiciona Supervisor(es) ----------
                     for sup in supervisores_validos:
                         if sup.nome in nomes_na_escala:
                             continue
@@ -303,6 +339,7 @@ def alocar_escala(funcionarios, rotatividade=False, frequencia_rotatividade=1, m
                         dados.append(linha)
                         nomes_na_escala.add(sup.nome)
 
+                    # ---------- adiciona RT(es) ----------
                     for rt in rts_validos:
                         if rt.nome in nomes_na_escala:
                             continue
@@ -316,25 +353,27 @@ def alocar_escala(funcionarios, rotatividade=False, frequencia_rotatividade=1, m
                         dados.append(linha)
                         nomes_na_escala.add(rt.nome)
 
+                    # ---------- grava CSV ----------
                     if dados:
                         df = pd.DataFrame(dados)
 
-                        # Ordena: Supervisor Técnico → Responsável Técnico → Demais
-                        def prioridade(row):
-                            if row["Função"] == "Supervisor Técnico":
-                                return 0
-                            elif row["Função"] == "Responsável Técnico":
-                                return 1
-                            else:
-                                return 2
+                        # prioridade de ordenação
+                        df["__ordem"] = df["Função"].map({
+                            "Supervisor Técnico": 0,
+                            "Responsável Técnico": 1
+                        }).fillna(2)
+                        df = df.sort_values("__ordem").drop(columns="__ordem")
 
-                        df["__ordem"] = df.apply(prioridade, axis=1)
-                        df = df.sort_values(by="__ordem").drop(columns="__ordem")
+                        arquivo = (
+                            f"{setor.replace(' ', '_').replace('/', '-')}"
+                            f"_({turno} {turno_id})_{nome_mes}_{ano}.csv"
+                        )
+                        caminho = os.path.join("escalas", arquivo)
+                        df.to_csv(caminho, index=False)
 
-                        nome_arquivo = f"{setor.replace(' ', '_').replace('/', '-')}_({turno} {turno_id})_{nome_mes}_{ano}.csv"
-                        caminho_completo = os.path.join("escalas", nome_arquivo)
-                        df.to_csv(caminho_completo, index=False)
-                        resultados.append((f"{setor} ({turno} {turno_id}) - {nome_mes} de {ano}", caminho_completo, df))
+                        resultados.append(
+                            (f"{setor} ({turno} {turno_id}) - {nome_mes} {ano}", caminho, df)
+                        )
 
     return resultados
 
@@ -1177,42 +1216,40 @@ def visualizar_e_editar_funcionarios():
         st.error(f"Erro ao carregar funcionários: {e}")
 
 
-st.title("Sistema de Alocação de Funcionários - UPA")
-st.image("imagens/logo.png", use_container_width=True)
 funcionarios = carregar_funcionarios(CAMINHO_CSV_DEFAULT)
 
 # inicializa ação como None
 acao = None
 
-with st.sidebar:
-    st.header("Menu")
-
-    with st.expander("Escalas"):
-        if st.button("Alocar novas escalas"):
-            acao = "Alocar novas escalas"
-        if st.button("Visualizar escalas"):
-            acao = "Visualizar escalas"
-
-    with st.expander("Funcionários"):
-        if st.button("Adicionar novo funcionário"):
-            acao = "Adicionar novo funcionário"
-        if st.button("Cadastrar RPA"):
-            acao = "Cadastrar RPA"
-        if st.button("Visualizar e editar funcionários"):
-            acao = "Visualizar e editar funcionários"
-
-    with st.expander("Faltas e Ocorrências"):
-        if st.button("Registrar falta ou ocorrência"):
-            acao = "Registrar falta ou ocorrência"
-        if st.button("Registrar faltas planejadas"):
-            acao = "Registrar faltas planejadas"
-        if st.button("Registrar troca de plantão"):
-            acao = "Registrar troca de plantão"
-        if st.button("Visualizar ocorrências"):
-            acao = "Visualizar ocorrências"
+if st.session_state.primeira_execucao:
+    st.title("Sistema de Alocação de Funcionários - UPA")
+    st.image("imagens/logo.png", use_container_width=True)
+    st.subheader("Bem-vindo ao sistema")
+    st.markdown("""
+    Utilize o menu lateral para acessar as funcionalidades do sistema, como:
+    - 📅 Gerenciamento de Escalas
+    - 👥 Cadastro e edição de Funcionários
+    - ❌ Registro de Faltas e Ocorrências
+    """)
 
 
-if acao == "Alocar novas escalas":
+st.sidebar.title("Menu")
+
+menu_opcao = st.sidebar.radio("Menu", [
+    "Alocar novas escalas",
+    "Visualizar escalas",
+    "Adicionar novo funcionário",
+    "Cadastrar RPA",
+    "Visualizar e editar funcionários",
+    "Registrar falta ou ocorrência",
+    "Registrar faltas planejadas",
+    "Registrar troca de plantão",
+    "Visualizar ocorrências"
+])
+# Assim que escolhe qualquer opção, desativa a tela inicial
+st.session_state.primeira_execucao = False
+
+if menu_opcao == "Alocar novas escalas":
     rotatividade = st.checkbox("Ativar rotatividade de setores", value=False)
     if rotatividade:
         frequencia = st.number_input("Rotacionar a cada quantos meses?", min_value=1, step=1, value=1)
@@ -1235,7 +1272,7 @@ if acao == "Alocar novas escalas":
         st.session_state["escalas"] = arquivos_gerados
         st.success("Escalas geradas com sucesso!")
 
-elif acao == "Visualizar escalas":
+elif menu_opcao == "Visualizar escalas":
     escalas_path = "escalas"
     arquivos_gerados = []
 
@@ -1300,23 +1337,23 @@ elif acao == "Visualizar escalas":
     else:
         st.info("Nenhuma escala encontrada na pasta 'escalas'.")
 
-elif acao == "Adicionar novo funcionário":
+elif menu_opcao == "Adicionar novo funcionário":
     adicionar_funcionario_interface()
 
-elif acao == "Cadastrar RPA":
+elif menu_opcao == "Cadastrar RPA":
     cadastrar_rpa_interface()
 
-elif acao == "Visualizar e editar funcionários":
+elif menu_opcao == "Visualizar e editar funcionários":
     visualizar_e_editar_funcionarios()
 
-elif acao == "Registrar falta ou ocorrência":
+elif menu_opcao == "Registrar falta ou ocorrência":
     registrar_falta_interface(funcionarios)
 
-elif acao == "Registrar faltas planejadas":
+elif menu_opcao == "Registrar faltas planejadas":
     registrar_falta_planejada_interface(funcionarios)
 
-elif acao == "Visualizar ocorrências":
+elif menu_opcao == "Visualizar ocorrências":
     visualizar_ocorrencias_interface()
 
-elif acao == "Registrar troca de plantão":
+elif menu_opcao == "Registrar troca de plantão":
     registrar_troca_plantao_interface(funcionarios)
